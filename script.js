@@ -7,6 +7,27 @@ const boughtItemsContainer = document.getElementById('bought-items');
 let products = [];
 let nextProductId = 1;
 
+function saveProducts() {
+    try {
+        localStorage.setItem('shoppingListProducts', JSON.stringify(products));
+    } catch (e) {
+        console.error("Error saving products to localStorage:", e);
+    }
+}
+
+function loadProducts() {
+    try {
+        const storedProducts = localStorage.getItem('shoppingListProducts');
+        if (storedProducts) {
+            return JSON.parse(storedProducts);
+        }
+    } catch (e) {
+        console.error("Error loading or parsing products from localStorage:", e);
+       
+    }
+    return null;
+}
+
 function createProductElement(product) {
     const productEntry = document.createElement('div');
     productEntry.classList.add('product-entry');
@@ -151,10 +172,11 @@ function renderProducts() {
         productListArea.prepend(addProductSection);
     }
     products.forEach(product => {
-        const productElement = createProductElement(product);
+        const productElement = createProductElement(product);   // Створюємо HTML для кожного товару
         productListArea.appendChild(productElement);
     });
     updateStatusSummary(); 
+    saveProducts();
 }
 
 function addProduct() {
@@ -185,10 +207,21 @@ newProductNameInput.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    products = [
-        { id: nextProductId++, name: 'Помідори', quantity: 3, bought: false, editing: false },
-        { id: nextProductId++, name: 'Печиво', quantity: 2, bought: true, editing: false },
-        { id: nextProductId++, name: 'Молоко', quantity: 1, bought: false, editing: false }
-    ];
-    renderProducts(); 
+    const loadedProducts = loadProducts();
+    if (loadedProducts) {
+        products = loadedProducts;
+        if (products.length > 0) {
+            nextProductId = Math.max(...products.map(p => p.id)) + 1;
+        } else {
+            nextProductId = 1;
+        }
+    } else {
+        products = [
+            { id: nextProductId++, name: 'Помідори', quantity: 3, bought: false, editing: false },
+            { id: nextProductId++, name: 'Печиво', quantity: 2, bought: true, editing: false },
+            { id: nextProductId++, name: 'Молоко', quantity: 1, bought: false, editing: false }
+        ];
+    }
+    renderProducts();
 });
+
